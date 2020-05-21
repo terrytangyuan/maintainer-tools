@@ -6,6 +6,7 @@ library(gh)
 
 # TODO: Add acknowlegement section with contributors stats and unique users who are involved in issue/PR discussions.
 # TODO: User GitHub contribution summary - for each user, summarize PR, issue, comments, reviews.
+# TODO: Compute company contributions
 
 get_changelog <- function(repo, from, until, labels_mapping = NULL) {
   pull_requests <- gh(sprintf("GET /repos/%s/pulls?state=closed&direction=asc", repo), .limit = Inf)
@@ -18,8 +19,16 @@ get_changelog <- function(repo, from, until, labels_mapping = NULL) {
   pr_participants <- c()
   for (pr in pull_requests) {
     merged_date <- pr$merged_at
-    if (!is.null(merged_date) && from_date < merged_date && merged_date < until_date ) {
-      change_item <- sprintf("* %s ([#%s](%s), [@%s](%s))\n", pr$title, pr$number, pr$html_url, pr$user$login, pr$user$html_url)
+    if (!is.null(merged_date) && from_date <= merged_date && merged_date <= until_date ) {
+      pr_title <- pr$title
+      if (1 %in% grep("[a-z]", substring(pr_title, 1, 1), ignore.case = TRUE)) {
+        pr_title_chars <- strsplit(pr_title, split = "")[[1]]
+        pr_title <- paste(
+          toupper(substring(pr_title, 1, 1)),
+          substring(pr_title, 2, length(pr_title_chars)),
+          sep = "", collapse = " ")
+      }
+      change_item <- sprintf("* %s ([#%s](%s), [@%s](%s))\n", pr_title, pr$number, pr$html_url, pr$user$login, pr$user$html_url)
       # TODO: Get actual first and last name if any
       pr_authors <- unique(c(pr_authors, pr$user$login))
       pr_comments <- gh(sprintf("GET %s", pr$comments_url))
