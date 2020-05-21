@@ -5,7 +5,7 @@ library(gh)
 # https://github.com/skywinder/ActionSheetPicker-3.0/blob/develop/CHANGELOG.md
 
 # TODO: Add acknowlegement section with contributors stats and unique users who are involved in issue/PR discussions.
-# TODO: User GitHub contribution summary
+# TODO: User GitHub contribution summary - for each user, summarize PR, issue, comments, reviews.
 
 get_changelog <- function(repo, from, until, labels_mapping = NULL) {
   pull_requests <- gh(sprintf("GET /repos/%s/pulls?state=closed&direction=asc", repo), .limit = Inf)
@@ -57,7 +57,7 @@ get_issues_summary <- function(repo, from, util) {
   issue_authors <- c()
   issue_participants <- c()
   for (issue in issues) {
-    closed_date <- pr$closed_at
+    closed_date <- issue$closed_at
     if (!is.null(closed_date) && from_date < closed_date && closed_date < until_date ) {
       issue_authors <- unique(c(issue_authors, issue$user$login))
       issue_comments <- gh(sprintf("GET %s", issue$comments_url))
