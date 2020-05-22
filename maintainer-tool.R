@@ -69,11 +69,15 @@ print.Changelog <- function(obj) {
     }
   }
   cat("\n## Acknowledgement\n\n")
-  cat(sprintf("Thanks %s for the contributions. Thanks %s for the involvements in pull requests.",
-              concat_ids(obj$participation$authors), concat_ids(obj$participation$participants)))
+  cat(sprintf(
+  paste0("Thanks to the following people who contributed directly to the codebase: %s. \n\n",
+  "We are also grateful to the following people who filed issues or helped resolve them, ",
+  "asked and answered questions, and were part of inspiring discussions: %s."),
+  concat_ids(obj$participation$authors), concat_ids(obj$participation$participants)))
 }
 
 concat_ids <- function(ids) {
+  ids <- lapply(ids, function(id) sprintf("[@%s](https://github.com/%s)", id, id))
   if (length(ids) == 1) {
     ids
   } else if (length(ids) == 2) {
