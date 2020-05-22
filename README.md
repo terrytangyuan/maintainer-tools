@@ -9,7 +9,7 @@ You can install the development version of **maintainertools** package from GitH
 
 ```r
 install.packages("remotes")
-remotes::install_github("terrytangyuan/maintainertools")
+remotes::install_github("terrytangyuan/maintainer-tools")
 ```
 
 
