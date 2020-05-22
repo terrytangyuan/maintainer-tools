@@ -7,6 +7,7 @@ library(gh)
 # TODO: Add acknowlegement section with contributors stats and unique users who are involved in issue/PR discussions.
 # TODO: User GitHub contribution summary - for each user, summarize PR, issue, comments, reviews.
 # TODO: Compute company contributions
+# TODO: Team memberships: gh("GET /orgs/kubeflow/teams/mpi-operator-team/memberships/")
 
 get_changelog <- function(repo, from, until, labels_mapping = NULL) {
   pull_requests <- gh(sprintf("GET /repos/%s/pulls?state=closed&direction=asc", repo), .limit = Inf)
@@ -50,13 +51,38 @@ get_changelog <- function(repo, from, until, labels_mapping = NULL) {
       }
     }
   }
-  return(list(
+  changelog <- list(
     sections = sections,
     participation = list(
       authors = pr_authors,
       participants = pr_participants)
-    ))
+  )
+  class(changelog) <- "Changelog"
+  return(changelog)
 }
+
+print.Changelog <- function(obj) {
+  for (section in names(obj$sections)) {
+    cat(sprintf("\n## %s\n\n", section))
+    for (item in obj$sections[[section]]) {
+      cat(item)
+    }
+  }
+  cat("\n## Acknowledgement\n\n")
+  cat(sprintf("Thanks %s for the contributions. Thanks %s for the involvements in pull requests.",
+              concat_ids(obj$participation$authors), concat_ids(obj$participation$participants)))
+}
+
+concat_ids <- function(ids) {
+  if (length(ids) == 1) {
+    ids
+  } else if (length(ids) == 2) {
+    paste0(ids[1], " and ", ids[2])
+  } else {
+    paste0(paste(ids[1:(length(ids)-1)], collapse = ", "), ", and ", ids[length(ids)])
+  }
+}
+
 
 get_issues_summary <- function(repo, from, util) {
   issues <- gh(sprintf("GET /repos/%s/issues?state=closed&direction=asc", repo), .limit = Inf)
@@ -90,5 +116,7 @@ logs <- get_changelog(
     "size/L" = "Large Changes",
     "size/M" = "Medium Changes")
   )
+print(logs)
+
 issues_summary <- get_issues_summary(repo, from, util)
 
