@@ -9,7 +9,7 @@ library(gh)
 # TODO: Compute company contributions
 # TODO: Team memberships: gh("GET /orgs/kubeflow/teams/mpi-operator-team/memberships/")
 
-get_changelog <- function(repo, from, until, labels_mapping = NULL) {
+get_pull_requests_summary <- function(repo, from, until, labels_mapping = NULL) {
   pull_requests <- gh(sprintf("GET /repos/%s/pulls?state=closed&direction=asc", repo), .limit = Inf)
   
   from_date <- as.Date(from)
@@ -51,42 +51,15 @@ get_changelog <- function(repo, from, until, labels_mapping = NULL) {
       }
     }
   }
-  changelog <- list(
+  pr_summary <- list(
     sections = sections,
     participation = list(
       authors = pr_authors,
       participants = pr_participants)
   )
-  class(changelog) <- "Changelog"
-  return(changelog)
+  class(pr_summary) <- "PullRequestsSummary"
+  return(pr_summary)
 }
-
-print.Changelog <- function(obj) {
-  for (section in names(obj$sections)) {
-    cat(sprintf("\n## %s\n\n", section))
-    for (item in obj$sections[[section]]) {
-      cat(item)
-    }
-  }
-  cat("\n## Acknowledgement\n\n")
-  cat(sprintf(
-  paste0("Thanks to the following people who contributed directly to the codebase: %s. \n\n",
-  "We are also grateful to the following people who filed issues or helped resolve them, ",
-  "asked and answered questions, and were part of inspiring discussions: %s."),
-  concat_ids(obj$participation$authors), concat_ids(obj$participation$participants)))
-}
-
-concat_ids <- function(ids) {
-  ids <- lapply(ids, function(id) sprintf("[@%s](https://github.com/%s)", id, id))
-  if (length(ids) == 1) {
-    ids
-  } else if (length(ids) == 2) {
-    paste0(ids[1], " and ", ids[2])
-  } else {
-    paste0(paste(ids[1:(length(ids)-1)], collapse = ", "), ", and ", ids[length(ids)])
-  }
-}
-
 
 get_issues_summary <- function(repo, from, util) {
   issues <- gh(sprintf("GET /repos/%s/issues?state=closed&direction=asc", repo), .limit = Inf)
@@ -103,24 +76,64 @@ get_issues_summary <- function(repo, from, util) {
       issue_participants <- unique(c(issue_participants, unlist(lapply(issue_comments, function(comment) comment$user$login))))
     }
   }
-  return(list(
+  issues_summary <- list(
     participation = list(
       authors = issue_authors,
       participants = issue_participants)
-    ))
+  )
+  class(issues_summary) <- "IssuesSummary"
+  return(issues_summary)
+}
+
+concat_ids <- function(ids) {
+  ids <- lapply(ids, function(id) sprintf("[@%s](https://github.com/%s)", id, id))
+  if (length(ids) == 1) {
+    ids
+  } else if (length(ids) == 2) {
+    paste0(ids[1], " and ", ids[2])
+  } else {
+    paste0(paste(ids[1:(length(ids)-1)], collapse = ", "), ", and ", ids[length(ids)])
+  }
+}
+
+get_release_summary <- function(repo, from, until, labels_mapping = NULL) {
+  pr_summary <- get_pull_requests_summary(repo, from, until, labels_mapping = NULL)
+  issue_summary <- get_issues_summary(repo, from, until)
+  release <- list(
+    pr_summary = pr_summary,
+    issue_summary = issue_summary
+  )
+  class(release) <- "Release"
+  return(release)
+}
+
+print.Release <- function(obj) {
+  issue_summary <- obj$issue_summary
+  pr_summary <- obj$pr_summary
+  for (section in names(pr_summary$sections)) {
+    cat(sprintf("\n## %s\n\n", section))
+    for (item in pr_summary$sections[[section]]) {
+      cat(item)
+    }
+  }
+  cat("\n## Acknowledgement\n\n")
+  cat(sprintf(
+    paste0("Thanks to the following people who contributed directly to the codebase: %s. \n\n",
+           "We are also grateful to the following people who filed issues or helped resolve them, ",
+           "asked and answered questions, and were part of inspiring discussions: %s."),
+    concat_ids(pr_summary$participation$authors),
+    unique(concat_ids(pr_summary$participation$participants), concat_ids(issue_summary$participation$participants))))
 }
 
 repo <- "kubeflow/common"
 from <- "2020-05-10"
 until <- "2020-05-19"
-logs <- get_changelog(
+release <- get_release_summary(
   repo, from, until,
   labels_mapping = list(
     "size/S" = "Small Changes",
     "size/L" = "Large Changes",
     "size/M" = "Medium Changes")
   )
-print(logs)
-
-issues_summary <- get_issues_summary(repo, from, util)
+print(release)
 
