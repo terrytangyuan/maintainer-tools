@@ -1,0 +1,20 @@
+Package: maintainertools
+Title: Collection of Useful Functions for Project Maintainers
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Yuan",
+           family = "Tang",
+           role = c("aut", "cre"),
+           email = "terrytangyuan@gmail.com",
+           comment = c(ORCID = "0000-0001-5243-233X"))
+Description: Provides useful a collection of functions for project maintainers, such as 
+    writing summaries for issues, pull requests, and releases for projects on GitHub.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.0.2
+Imports: 
+    gh
+Suggests: 
+    testthat
