@@ -7,8 +7,8 @@ Authors@R:
            role = c("aut", "cre"),
            email = "terrytangyuan@gmail.com",
            comment = c(ORCID = "0000-0001-5243-233X"))
-Description: Provides useful a collection of functions for project maintainers, such as 
-    writing summaries for issues, pull requests, and releases for projects on GitHub.
+Description: Provides a collection of useful functions for project maintainers, such as 
+    writing summaries on issues, pull requests, and preparing for releases for projects on GitHub.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

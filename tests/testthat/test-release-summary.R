@@ -47,4 +47,8 @@ test_that("summaries can be generated correctly for releases", {
   expect_equal(pr_summary$participation,
                list(authors = c("terrytangyuan", "Jeffwan"),
                     participants = c("kubeflow-bot", "Jeffwan", "k8s-ci-robot", "merlintang", "terrytangyuan", "ChanYiLin")))
+
+  actual_summary <- capture.output(print(release_summary))
+  expected_summary <- readLines("resources/example-release-notes.md", warn = FALSE)
+  expect_equal(actual_summary, expected_summary)
 })

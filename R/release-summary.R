@@ -1,12 +1,28 @@
-# TODO: Add statistics for repo contributions similar to https://github.com/kubeflow/common/pulse
-# https://developer.github.com/v3/repos/statistics/
-# https://github.com/skywinder/ActionSheetPicker-3.0/blob/develop/CHANGELOG.md
-
-# TODO: Add acknowlegement section with contributors stats and unique users who are involved in issue/PR discussions.
-# TODO: User GitHub contribution summary - for each user, summarize PR, issue, comments, reviews.
-# TODO: Compute company contributions
-# TODO: Team memberships: gh("GET /orgs/kubeflow/teams/mpi-operator-team/memberships/")
-
+#' Get a summary on pull requests of the project.
+#'
+#' @param repo The repository name.
+#' @param from The start date of pull request closed time that the summary operate on.
+#' @param until The end date of pull request closed time that the summary operate on.
+#' @param labels_mapping The list of mappings from labels to section text in the summary.
+#'
+#' @note The API is experimental and subject to change.
+#'
+#' @importFrom gh gh
+#'
+#' @examples
+#' \donttest{
+#'
+#' repo <- "kubeflow/common"
+#' from <- "2020-05-10"
+#' until <- "2020-05-19"
+#' labels_mapping <- list(
+#'   "size/S" = "Small Changes",
+#'   "size/L" = "Large Changes",
+#'   "size/M" = "Medium Changes")
+#' get_pull_requests_summary(repo, from, until, labels_mapping)
+#' }
+#'
+#' @export
 get_pull_requests_summary <- function(repo, from, until, labels_mapping = NULL) {
   pull_requests <- gh::gh(sprintf("GET /repos/%s/pulls?state=closed&direction=asc", repo), .limit = Inf)
 
@@ -59,6 +75,26 @@ get_pull_requests_summary <- function(repo, from, until, labels_mapping = NULL) 
   return(pr_summary)
 }
 
+#' Get a summary on issues of the project.
+#'
+#' @param repo The repository name.
+#' @param from The start date of pull request closed time that the summary operate on.
+#' @param until The end date of pull request closed time that the summary operate on.
+#'
+#' @note The API is experimental and subject to change.
+#'
+#' @importFrom gh gh
+#'
+#' @examples
+#' \donttest{
+#'
+#' repo <- "kubeflow/common"
+#' from <- "2020-05-10"
+#' until <- "2020-05-19"
+#' get_issues_summary(repo, from, until)
+#' }
+#'
+#' @export
 get_issues_summary <- function(repo, from, until) {
   issues <- gh::gh(sprintf("GET /repos/%s/issues?state=closed&direction=asc", repo), .limit = Inf)
 
@@ -94,6 +130,31 @@ concat_ids <- function(ids) {
   }
 }
 
+#' Get a summary that can be used for release notes of the project.
+#'
+#' @param repo The repository name.
+#' @param from The start date of pull request or issue closed time that the summary operate on.
+#' @param until The end date of pull request or issue closed time that the summary operate on.
+#' @param labels_mapping The list of mappings from labels to section text in the summary.
+#'
+#' @note The API is experimental and subject to change.
+#'
+#' @importFrom gh gh
+#'
+#' @examples
+#' \donttest{
+#'
+#' repo <- "kubeflow/common"
+#' from <- "2020-05-10"
+#' until <- "2020-05-19"
+#' labels_mapping <- list(
+#'   "size/S" = "Small Changes",
+#'   "size/L" = "Large Changes",
+#'   "size/M" = "Medium Changes")
+#' get_release_summary(repo, from, until, labels_mapping)
+#' }
+#'
+#' @export
 get_release_summary <- function(repo, from, until, labels_mapping = NULL) {
   pr_summary <- get_pull_requests_summary(repo, from, until, labels_mapping = labels_mapping)
   issue_summary <- get_issues_summary(repo, from, until)
@@ -105,6 +166,7 @@ get_release_summary <- function(repo, from, until, labels_mapping = NULL) {
   return(release)
 }
 
+#' @export
 print.Release <- function(obj) {
   issue_summary <- obj$issue_summary
   pr_summary <- obj$pr_summary
@@ -118,7 +180,7 @@ print.Release <- function(obj) {
   cat(sprintf(
     paste0("Thanks to the following people who contributed directly to the codebase: %s. \n\n",
            "We are also grateful to the following people who filed issues or helped resolve them, ",
-           "asked and answered questions, and were part of inspiring discussions: %s."),
+           "asked and answered questions, and were part of inspiring discussions: %s.\n"),
     concat_ids(pr_summary$participation$authors),
     unique(concat_ids(pr_summary$participation$participants), concat_ids(issue_summary$participation$participants))))
 }
