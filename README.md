@@ -32,3 +32,9 @@ get_release_summary(repo, from, until, labels_mapping)
 ```
 
 You can find an example release summmary [here](./tests/testthat/resources/example-release-notes.md).
+
+Note that if you intend to run a large number of requests, you may want to add your GitHub token to environment variable like the following:
+
+```r
+Sys.setenv(GITHUB_TOKEN = "XXX")
+```
